@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
+    id 'org.jetbrains.kotlin.kapt'   // kapt 随 Kotlin 插件提供，无需单独指定版本
 }
 
 // 正式签名是可选的：通过环境变量提供签名文件后，release 使用正式签名；
