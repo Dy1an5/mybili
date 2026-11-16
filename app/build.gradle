@@ -1,0 +1,98 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.kapt)
+}
+
+// 正式签名是可选的：通过环境变量提供签名文件后，release 使用正式签名；
+// 否则回退到 debug 签名，保证 CI 构建出的 APK 也能直接安装。
+def releaseKeystorePath = System.getenv("KEYSTORE_FILE")
+def hasReleaseKeystore = releaseKeystorePath != null &&
+        !releaseKeystorePath.trim().isEmpty() &&
+        file(releaseKeystorePath).exists()
+
+android {
+    namespace 'com.mybili'
+    compileSdk 35
+
+    buildFeatures {
+        compose = true  // 启用 Compose
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
+
+    defaultConfig {
+        applicationId "com.mybili"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+    }
+
+    signingConfigs {
+        release {
+            if (hasReleaseKeystore) {
+                storeFile file(releaseKeystorePath)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig(hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug)
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    kapt 'com.github.bumptech.glide:compiler:4.16.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation "androidx.media3:media3-exoplayer:1.2.0"
+    implementation "androidx.media3:media3-ui:1.2.0"
+    implementation "androidx.media3:media3-datasource-okhttp:1.2.0"
+
+    implementation "androidx.compose.runtime:runtime:1.6.1"
+    implementation "androidx.compose.ui:ui:1.6.1"
+    implementation "androidx.compose.foundation:foundation:1.6.1"
+    implementation "androidx.compose.material3:material3:1.2.0"
+
+    // Room 数据库依赖
+    def room_version = '2.6.1'
+    implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+
+    kapt "androidx.room:room-compiler:$room_version"
+    // Kotlin 协程
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+
+    // Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+}
